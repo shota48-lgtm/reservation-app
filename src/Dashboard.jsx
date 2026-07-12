@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
 import ReservationForm from './ReservationForm'
 import CustomerList from './CustomerList'
+import CalendarView from './CalendarView'
 
 const STATUS_LABEL = {
   confirmed: '確定',
@@ -30,7 +31,7 @@ function Dashboard({ session }) {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingReservation, setEditingReservation] = useState(null)
-  const [activeTab, setActiveTab] = useState('reservations') // 'reservations' | 'customers'
+  const [activeTab, setActiveTab] = useState('reservations') // 'reservations' | 'calendar' | 'customers'
 
   useEffect(() => {
     fetchShopAndReservations()
@@ -128,10 +129,10 @@ function Dashboard({ session }) {
         </div>
 
         {/* タブ切り替え */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 flex gap-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 flex gap-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('reservations')}
-            className="pb-3 text-sm font-medium"
+            className="pb-3 text-sm font-medium whitespace-nowrap"
             style={{
               borderBottom: activeTab === 'reservations' ? '2px solid var(--color-accent)' : '2px solid transparent',
               color: activeTab === 'reservations' ? 'var(--color-accent-dark)' : 'var(--color-text-muted)',
@@ -140,8 +141,18 @@ function Dashboard({ session }) {
             予約一覧
           </button>
           <button
+            onClick={() => setActiveTab('calendar')}
+            className="pb-3 text-sm font-medium whitespace-nowrap"
+            style={{
+              borderBottom: activeTab === 'calendar' ? '2px solid var(--color-accent)' : '2px solid transparent',
+              color: activeTab === 'calendar' ? 'var(--color-accent-dark)' : 'var(--color-text-muted)',
+            }}
+          >
+            カレンダー
+          </button>
+          <button
             onClick={() => setActiveTab('customers')}
-            className="pb-3 text-sm font-medium"
+            className="pb-3 text-sm font-medium whitespace-nowrap"
             style={{
               borderBottom: activeTab === 'customers' ? '2px solid var(--color-accent)' : '2px solid transparent',
               color: activeTab === 'customers' ? 'var(--color-accent-dark)' : 'var(--color-text-muted)',
@@ -154,7 +165,7 @@ function Dashboard({ session }) {
 
       {/* メインコンテンツ */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {activeTab === 'reservations' ? (
+        {activeTab === 'reservations' && (
           <>
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-display text-lg font-bold">予約一覧</h2>
@@ -251,9 +262,28 @@ function Dashboard({ session }) {
               </>
             )}
           </>
-        ) : (
-          <CustomerList shopId={shop.id} />
         )}
+
+        {activeTab === 'calendar' && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="font-display text-lg font-bold">カレンダー</h2>
+              <button
+                onClick={() => setShowForm(true)}
+                className="btn-primary px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                + 新規予約
+              </button>
+            </div>
+            <CalendarView
+              reservations={reservations}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </>
+        )}
+
+        {activeTab === 'customers' && <CustomerList shopId={shop.id} />}
       </main>
 
       {showForm && shop && (
