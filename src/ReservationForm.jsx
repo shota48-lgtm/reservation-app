@@ -1,50 +1,85 @@
 import { useState } from 'react'
 import { supabase } from './supabaseClient'
 
-function ReservationForm({ shopId, onClose, onSaved }) {
-  const [customerName, setCustomerName] = useState('')
-  const [customerPhone, setCustomerPhone] = useState('')
-  const [date, setDate] = useState('')
-  const [startTime, setStartTime] = useState('')
-  const [endTime, setEndTime] = useState('')
-  const [memo, setMemo] = useState('')
+function ReservationForm({ shopId, onClose, onSaved, editData }) {
+  const isEdit = !!editData
+
+  const [customerName, setCustomerName] = useState(editData?.customers?.name || '')
+  const [customerPhone, setCustomerPhone] = useState(editData?.customers?.phone || '')
+  const [date, setDate] = useState(editData?.reservation_date || '')
+  const [startTime, setStartTime] = useState(editData?.start_time?.slice(0, 5) || '')
+  const [endTime, setEndTime] = useState(editData?.end_time?.slice(0, 5) || '')
+  const [memo, setMemo] = useState(editData?.memo || '')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+
+  const today = new Date().toISOString().split('T')[0]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
 
-    const { data: customerData, error: customerError } = await supabase
-      .from('customers')
-      .insert([{ shop_id: shopId, name: customerName, phone: customerPhone }])
-      .select()
-      .single()
+    if (isEdit) {
+      // 編集：顧客情報と予約情報を更新
+      const { error: customerError } = await supabase
+        .from('customers')
+        .update({ name: customerName, phone: customerPhone })
+        .eq('id', editData.customer_id)
 
-    if (customerError) {
-      setMessage('顧客登録エラー: ' + customerError.message)
-      setLoading(false)
-      return
-    }
+      if (customerError) {
+        setMessage('顧客更新エラー: ' + customerError.message)
+        setLoading(false)
+        return
+      }
 
-    const { error: reservationError } = await supabase
-      .from('reservations')
-      .insert([
-        {
-          shop_id: shopId,
-          customer_id: customerData.id,
+      const { error: reservationError } = await supabase
+        .from('reservations')
+        .update({
           reservation_date: date,
           start_time: startTime,
           end_time: endTime,
           memo: memo,
-        },
-      ])
+        })
+        .eq('id', editData.id)
 
-    if (reservationError) {
-      setMessage('予約登録エラー: ' + reservationError.message)
-      setLoading(false)
-      return
+      if (reservationError) {
+        setMessage('予約更新エラー: ' + reservationError.message)
+        setLoading(false)
+        return
+      }
+    } else {
+      // 新規作成
+      const { data: customerData, error: customerError } = await supabase
+        .from('customers')
+        .insert([{ shop_id: shopId, name: customerName, phone: customerPhone }])
+        .select()
+        .single()
+
+      if (customerError) {
+        setMessage('顧客登録エラー: ' + customerError.message)
+        setLoading(false)
+        return
+      }
+
+      const { error: reservationError } = await supabase
+        .from('reservations')
+        .insert([
+          {
+            shop_id: shopId,
+            customer_id: customerData.id,
+            reservation_date: date,
+            start_time: startTime,
+            end_time: endTime,
+            memo: memo,
+          },
+        ])
+
+      if (reservationError) {
+        setMessage('予約登録エラー: ' + reservationError.message)
+        setLoading(false)
+        return
+      }
     }
 
     setLoading(false)
@@ -58,7 +93,9 @@ function ReservationForm({ shopId, onClose, onSaved }) {
     >
       <div className="card w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="font-display text-lg font-bold">新規予約</h2>
+          <h2 className="font-display text-lg font-bold">
+            {isEdit ? '予約を編集' : '新規予約'}
+          </h2>
           <button
             onClick={onClose}
             className="text-lg leading-none"
@@ -98,6 +135,7 @@ function ReservationForm({ shopId, onClose, onSaved }) {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
+              min={today}
               className="input-field w-full px-3 py-2"
             />
           </div>
@@ -154,7 +192,7 @@ function ReservationForm({ shopId, onClose, onSaved }) {
               disabled={loading}
               className="btn-primary flex-1 py-2 rounded-lg text-sm font-medium"
             >
-              {loading ? '保存中...' : '保存する'}
+              {loading ? '保存中...' : isEdit ? '更新する' : '保存する'}
             </button>
           </div>
         </form>
