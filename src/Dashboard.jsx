@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
+import ReservationForm from './ReservationForm'
 
 function Dashboard({ session }) {
   const [shop, setShop] = useState(null)
   const [reservations, setReservations] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
     fetchShopAndReservations()
@@ -48,6 +50,11 @@ function Dashboard({ session }) {
     await supabase.auth.signOut()
   }
 
+  const handleReservationSaved = () => {
+    setShowForm(false)
+    fetchShopAndReservations() // 一覧を再取得して最新化
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -75,7 +82,10 @@ function Dashboard({ session }) {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold">予約一覧</h2>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
             + 新規予約
           </button>
         </div>
@@ -113,6 +123,15 @@ function Dashboard({ session }) {
           </div>
         )}
       </main>
+
+      {/* 新規予約モーダル */}
+      {showForm && shop && (
+        <ReservationForm
+          shopId={shop.id}
+          onClose={() => setShowForm(false)}
+          onSaved={handleReservationSaved}
+        />
+      )}
     </div>
   )
 }
