@@ -16,7 +16,6 @@ function ReservationForm({ shopId, onClose, onSaved }) {
     setLoading(true)
     setMessage('')
 
-    // 1. 顧客を新規作成
     const { data: customerData, error: customerError } = await supabase
       .from('customers')
       .insert([{ shop_id: shopId, name: customerName, phone: customerPhone }])
@@ -29,7 +28,6 @@ function ReservationForm({ shopId, onClose, onSaved }) {
       return
     }
 
-    // 2. 予約を新規作成
     const { error: reservationError } = await supabase
       .from('reservations')
       .insert([
@@ -50,15 +48,22 @@ function ReservationForm({ shopId, onClose, onSaved }) {
     }
 
     setLoading(false)
-    onSaved() // 親コンポーネントに保存完了を通知（一覧を再取得させる）
+    onSaved()
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold">新規予約</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      style={{ backgroundColor: 'rgba(38, 36, 31, 0.5)' }}
+    >
+      <div className="card w-full max-w-md p-6">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="font-display text-lg font-bold">新規予約</h2>
+          <button
+            onClick={onClose}
+            className="text-lg leading-none"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
             ✕
           </button>
         </div>
@@ -71,7 +76,7 @@ function ReservationForm({ shopId, onClose, onSaved }) {
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
-              className="w-full border rounded px-3 py-2"
+              className="input-field w-full px-3 py-2"
             />
           </div>
 
@@ -81,7 +86,7 @@ function ReservationForm({ shopId, onClose, onSaved }) {
               type="tel"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="input-field w-full px-3 py-2"
               placeholder="任意"
             />
           </div>
@@ -93,7 +98,7 @@ function ReservationForm({ shopId, onClose, onSaved }) {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               required
-              className="w-full border rounded px-3 py-2"
+              className="input-field w-full px-3 py-2"
             />
           </div>
 
@@ -105,7 +110,7 @@ function ReservationForm({ shopId, onClose, onSaved }) {
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="input-field w-full px-3 py-2"
               />
             </div>
             <div className="flex-1">
@@ -115,7 +120,7 @@ function ReservationForm({ shopId, onClose, onSaved }) {
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 required
-                className="w-full border rounded px-3 py-2"
+                className="input-field w-full px-3 py-2"
               />
             </div>
           </div>
@@ -125,26 +130,29 @@ function ReservationForm({ shopId, onClose, onSaved }) {
             <textarea
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="input-field w-full px-3 py-2"
               rows={2}
               placeholder="任意"
             />
           </div>
 
-          {message && <p className="text-sm text-red-600">{message}</p>}
+          {message && (
+            <p className="text-sm" style={{ color: 'var(--color-cancelled)' }}>{message}</p>
+          )}
 
           <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-gray-300 py-2 rounded hover:bg-gray-50"
+              className="flex-1 py-2 rounded-lg text-sm font-medium"
+              style={{ border: '1px solid var(--color-border)' }}
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+              className="btn-primary flex-1 py-2 rounded-lg text-sm font-medium"
             >
               {loading ? '保存中...' : '保存する'}
             </button>

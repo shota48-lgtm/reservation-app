@@ -15,11 +15,7 @@ function Login() {
     setMessage('')
 
     if (isSignUp) {
-      // 新規登録
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
+      const { data, error } = await supabase.auth.signUp({ email, password })
 
       if (error) {
         setMessage('エラー: ' + error.message)
@@ -27,7 +23,6 @@ function Login() {
         return
       }
 
-      // 店舗情報も同時に作成（セッションが確立されている場合のみ）
       if (data.session) {
         const { error: shopError } = await supabase
           .from('shops')
@@ -42,12 +37,7 @@ function Login() {
         setMessage('登録完了！確認メールをチェックしてください。')
       }
     } else {
-      // ログイン
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         setMessage('エラー: ' + error.message)
       }
@@ -57,11 +47,14 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="card w-full max-w-md p-8">
+        <h1 className="font-display text-2xl font-bold mb-1 text-center">
           {isSignUp ? '店舗オーナー登録' : 'ログイン'}
         </h1>
+        <p className="text-sm text-center mb-6" style={{ color: 'var(--color-text-muted)' }}>
+          {isSignUp ? 'サロン予約管理をはじめましょう' : 'おかえりなさい'}
+        </p>
 
         <form onSubmit={handleAuth} className="space-y-4">
           {isSignUp && (
@@ -72,8 +65,8 @@ function Login() {
                 value={shopName}
                 onChange={(e) => setShopName(e.target.value)}
                 required
-                className="w-full border rounded px-3 py-2"
-                placeholder="例：〇〇サロン"
+                className="input-field w-full px-3 py-2"
+                placeholder="例：とーふサロン"
               />
             </div>
           )}
@@ -85,7 +78,7 @@ function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full border rounded px-3 py-2"
+              className="input-field w-full px-3 py-2"
               placeholder="you@example.com"
             />
           </div>
@@ -98,7 +91,7 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full border rounded px-3 py-2"
+              className="input-field w-full px-3 py-2"
               placeholder="6文字以上"
             />
           </div>
@@ -106,19 +99,22 @@ function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            className="btn-primary w-full py-2.5 rounded-lg font-medium"
           >
             {loading ? '処理中...' : isSignUp ? '登録する' : 'ログイン'}
           </button>
         </form>
 
         {message && (
-          <p className="mt-4 text-sm text-center text-red-600">{message}</p>
+          <p className="mt-4 text-sm text-center" style={{ color: 'var(--color-cancelled)' }}>
+            {message}
+          </p>
         )}
 
         <button
           onClick={() => setIsSignUp(!isSignUp)}
-          className="mt-4 text-sm text-blue-600 hover:underline w-full text-center"
+          className="mt-5 text-sm w-full text-center hover:underline"
+          style={{ color: 'var(--color-accent)' }}
         >
           {isSignUp ? 'すでにアカウントをお持ちの方はこちら' : '新規登録はこちら'}
         </button>

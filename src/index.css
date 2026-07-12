@@ -1,1 +1,56 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+:root {
+  --color-bg: #F7F5F1;
+  --color-surface: #FFFFFF;
+  --color-text: #26241F;
+  --color-text-muted: #7A756B;
+  --color-accent: #3B6259;
+  --color-accent-dark: #2A473F;
+  --color-accent-soft: #E7EEEB;
+  --color-border: #E6E1D8;
+  --color-confirmed: #3F6B4F;
+  --color-confirmed-bg: #E7F0E9;
+  --color-cancelled: #9B4444;
+  --color-cancelled-bg: #F5E7E7;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.font-display {
+  font-family: 'Shippori Mincho', serif;
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: white;
+  transition: background-color 0.15s ease;
+}
+.btn-primary:hover {
+  background-color: var(--color-accent-dark);
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+.input-field {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
