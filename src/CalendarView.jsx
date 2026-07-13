@@ -34,7 +34,6 @@ function CalendarView({ reservations, onEdit, onDelete }) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(toDateKey(new Date()))
 
-  // 日付ごとに予約をグループ化
   const reservationsByDate = {}
   reservations.forEach((r) => {
     if (!reservationsByDate[r.reservation_date]) {
@@ -71,7 +70,6 @@ function CalendarView({ reservations, onEdit, onDelete }) {
 
   return (
     <div>
-      {/* カレンダーヘッダー */}
       <div className="card p-4 sm:p-6">
         <div className="flex justify-between items-center mb-4">
           <button
@@ -93,7 +91,6 @@ function CalendarView({ reservations, onEdit, onDelete }) {
           </button>
         </div>
 
-        {/* 曜日ヘッダー */}
         <div className="grid grid-cols-7 mb-1">
           {WEEKDAYS.map((w) => (
             <div
@@ -106,15 +103,27 @@ function CalendarView({ reservations, onEdit, onDelete }) {
           ))}
         </div>
 
-        {/* 日付グリッド */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1.5">
           {cells.map((date, i) => {
             if (!date) return <div key={i} />
 
             const dateKey = toDateKey(date)
-            const hasReservation = !!reservationsByDate[dateKey]
+            const count = reservationsByDate[dateKey]?.length || 0
+            const hasReservation = count > 0
             const isSelected = dateKey === selectedDate
             const isToday = dateKey === todayKey
+
+            let bgColor = 'transparent'
+            let textColor = 'var(--color-text)'
+            if (isSelected) {
+              bgColor = 'var(--color-accent)'
+              textColor = '#FFFFFF'
+            } else if (hasReservation) {
+              bgColor = 'var(--color-accent-soft)'
+              textColor = 'var(--color-accent-dark)'
+            } else if (isToday) {
+              textColor = 'var(--color-accent-dark)'
+            }
 
             return (
               <button
@@ -122,19 +131,23 @@ function CalendarView({ reservations, onEdit, onDelete }) {
                 onClick={() => setSelectedDate(dateKey)}
                 className="aspect-square flex flex-col items-center justify-center rounded-lg text-sm relative"
                 style={{
-                  backgroundColor: isSelected ? 'var(--color-accent)' : 'transparent',
-                  color: isSelected ? '#FFFFFF' : isToday ? 'var(--color-accent-dark)' : 'var(--color-text)',
-                  fontWeight: isToday || isSelected ? 700 : 400,
+                  backgroundColor: bgColor,
+                  color: textColor,
+                  fontWeight: isToday || isSelected || hasReservation ? 700 : 400,
+                  border: isToday && !isSelected ? '1.5px solid var(--color-accent)' : 'none',
                 }}
               >
                 {date.getDate()}
                 {hasReservation && (
                   <span
-                    className="w-1 h-1 rounded-full absolute bottom-1"
+                    className="text-[9px] leading-none mt-0.5 px-1 rounded-full"
                     style={{
-                      backgroundColor: isSelected ? '#FFFFFF' : 'var(--color-accent)',
+                      backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--color-accent)',
+                      color: '#FFFFFF',
                     }}
-                  />
+                  >
+                    {count}件
+                  </span>
                 )}
               </button>
             )
@@ -142,7 +155,6 @@ function CalendarView({ reservations, onEdit, onDelete }) {
         </div>
       </div>
 
-      {/* 選択日の予約一覧 */}
       <div className="mt-6">
         <h3 className="font-display text-base font-bold mb-3">
           {selectedDate} の予約
