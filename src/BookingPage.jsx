@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from './supabaseClient'
-
-function generateTimeOptions(startHour, endHour, stepMinutes = 15) {
-  const options = []
-  for (let h = startHour; h <= endHour; h++) {
-    for (let m = 0; m < 60; m += stepMinutes) {
-      if (h === endHour && m > 0) break
-      options.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
-    }
-  }
-  return options
-}
+import { generateTimeOptions, timeToMinutes, rangesOverlap } from './lib/time'
 
 function BookingPage() {
   const { shopId } = useParams()
@@ -61,11 +51,6 @@ function BookingPage() {
     fetchShop()
   }, [shopId])
 
-  const timeToMinutes = (t) => {
-    const [h, m] = t.split(':').map(Number)
-    return h * 60 + m
-  }
-
   const validate = () => {
     const shopStart = shop.business_hours_start?.slice(0, 5) || '09:00'
     const shopEnd = shop.business_hours_end?.slice(0, 5) || '18:00'
@@ -78,14 +63,9 @@ function BookingPage() {
       return '終了時刻は開始時刻より後にしてください'
     }
 
-    const isOverlapping = existingReservations.some((r) => {
-      if (r.reservation_date !== date) return false
-      const existingStart = timeToMinutes(r.start_time.slice(0, 5))
-      const existingEnd = timeToMinutes(r.end_time.slice(0, 5))
-      const newStart = timeToMinutes(startTime)
-      const newEnd = timeToMinutes(endTime)
-      return newStart < existingEnd && newEnd > existingStart
-    })
+    const isOverlapping = existingReservations.some(
+      (r) => r.reservation_date === date && rangesOverlap(startTime, endTime, r.start_time.slice(0, 5), r.end_time.slice(0, 5))
+    )
 
     if (isOverlapping) {
       return 'その時間帯はすでに予約が入っています。別の時間を選択してください'

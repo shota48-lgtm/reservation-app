@@ -134,25 +134,6 @@ function Dashboard({ session }) {
     }
   }
 
-  const handleDelete = async (reservation) => {
-    const confirmed = window.confirm(
-      `${reservation.customers?.name || '顧客'}様の予約（${reservation.reservation_date}）を完全に削除しますか？この操作は取り消せません。`
-    )
-    if (!confirmed) return
-
-    const { error } = await supabase
-      .from('reservations')
-      .delete()
-      .eq('id', reservation.id)
-
-    if (error) {
-      alert('削除に失敗しました: ' + error.message)
-      return
-    }
-
-    fetchShopAndReservations()
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -296,13 +277,6 @@ function Dashboard({ session }) {
                         >
                           編集
                         </button>
-                        <button
-                          onClick={() => handleDelete(r)}
-                          className="text-sm hover:underline"
-                          style={{ color: 'var(--color-cancelled)' }}
-                        >
-                          削除
-                        </button>
                       </div>
                     </div>
                   ))}
@@ -337,13 +311,6 @@ function Dashboard({ session }) {
                             >
                               編集
                             </button>
-                            <button
-                              onClick={() => handleDelete(r)}
-                              className="hover:underline"
-                              style={{ color: 'var(--color-cancelled)' }}
-                            >
-                              削除
-                            </button>
                           </td>
                         </tr>
                       ))}
@@ -369,7 +336,6 @@ function Dashboard({ session }) {
             <CalendarView
               reservations={reservations}
               onEdit={handleEdit}
-              onDelete={handleDelete}
               onStatusChange={handleStatusChange}
             />
           </>
