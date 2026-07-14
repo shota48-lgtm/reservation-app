@@ -36,7 +36,7 @@ function toDateKey(date) {
   return `${y}-${m}-${d}`
 }
 
-function CalendarView({ reservations, onEdit, onDelete, onStatusChange }) {
+function CalendarView({ reservations, onEdit, onStatusChange }) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(toDateKey(new Date()))
 
@@ -197,13 +197,6 @@ function CalendarView({ reservations, onEdit, onDelete, onStatusChange }) {
                       style={{ color: 'var(--color-accent)' }}
                     >
                       編集
-                    </button>
-                    <button
-                      onClick={() => onDelete(r)}
-                      className="text-sm hover:underline"
-                      style={{ color: 'var(--color-cancelled)' }}
-                    >
-                      削除
                     </button>
                   </div>
                 </div>
