@@ -29,7 +29,11 @@ function Login() {
           .insert([{ owner_id: data.user.id, name: shopName }])
 
         if (shopError) {
-          setMessage('店舗登録エラー: ' + shopError.message)
+          setMessage(
+            shopError.code === '23505'
+              ? '既に店舗が登録されています。ページを再読み込みしてください。'
+              : '店舗登録エラー: ' + shopError.message
+          )
         } else {
           setMessage('登録完了！')
         }
