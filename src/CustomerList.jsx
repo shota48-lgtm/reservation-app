@@ -15,7 +15,7 @@ function CustomerList({ shopId }) {
     // 顧客一覧と、それぞれの予約件数を取得
     const { data: customerData, error: customerError } = await supabase
       .from('customers')
-      .select('*, reservations(id)')
+      .select('*, reservations(id, status)')
       .eq('shop_id', shopId)
       .order('created_at', { ascending: false })
 
@@ -67,7 +67,7 @@ function CustomerList({ shopId }) {
                       className="px-2.5 py-1 rounded-full text-xs font-medium"
                       style={{ backgroundColor: 'var(--color-accent-soft)', color: 'var(--color-accent-dark)' }}
                     >
-                      {c.reservations?.length || 0}回
+                      {c.reservations?.filter((r) => r.status !== 'cancelled').length || 0}回
                     </span>
                   </td>
                 </tr>

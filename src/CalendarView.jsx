@@ -8,18 +8,24 @@ const STATUS_LABEL = {
   completed: '完了',
 }
 
-function StatusBadge({ status }) {
+const STATUS_OPTIONS = ['confirmed', 'completed', 'cancelled']
+
+function StatusSelect({ status, onChange }) {
   const isCancelled = status === 'cancelled'
   return (
-    <span
-      className="px-2.5 py-1 rounded-full text-xs font-medium"
+    <select
+      value={status}
+      onChange={(e) => onChange(e.target.value)}
+      className="px-2.5 py-1 rounded-full text-xs font-medium border-0"
       style={{
         backgroundColor: isCancelled ? 'var(--color-cancelled-bg)' : 'var(--color-confirmed-bg)',
         color: isCancelled ? 'var(--color-cancelled)' : 'var(--color-confirmed)',
       }}
     >
-      {STATUS_LABEL[status] || status}
-    </span>
+      {STATUS_OPTIONS.map((s) => (
+        <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+      ))}
+    </select>
   )
 }
 
@@ -30,7 +36,7 @@ function toDateKey(date) {
   return `${y}-${m}-${d}`
 }
 
-function CalendarView({ reservations, onEdit, onDelete }) {
+function CalendarView({ reservations, onEdit, onDelete, onStatusChange }) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(toDateKey(new Date()))
 
@@ -174,7 +180,7 @@ function CalendarView({ reservations, onEdit, onDelete }) {
                 <div key={r.id} className="card p-4">
                   <div className="flex justify-between items-start mb-2">
                     <p className="font-medium text-sm">{r.customers?.name || '-'}</p>
-                    <StatusBadge status={r.status} />
+                    <StatusSelect status={r.status} onChange={(newStatus) => onStatusChange(r, newStatus)} />
                   </div>
                   <p className="text-sm mb-1" style={{ color: 'var(--color-text-muted)' }}>
                     {r.start_time} - {r.end_time}
