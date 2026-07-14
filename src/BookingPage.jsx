@@ -21,10 +21,6 @@ function BookingPage() {
 
   const today = new Date().toISOString().split('T')[0]
 
-  useEffect(() => {
-    fetchShop()
-  }, [shopId])
-
   const fetchShop = async () => {
     setLoading(true)
 
@@ -50,6 +46,10 @@ function BookingPage() {
     setExistingReservations(reservationData || [])
     setLoading(false)
   }
+
+  useEffect(() => {
+    fetchShop()
+  }, [shopId])
 
   const validate = () => {
     const shopStart = shop.business_hours_start?.slice(0, 5) || '09:00'
