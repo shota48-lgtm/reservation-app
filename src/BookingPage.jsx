@@ -53,10 +53,9 @@ function BookingPage() {
     setShop(shopData)
 
     const { data: reservationData } = await supabase
-      .from('reservations')
+      .from('public_availability')
       .select('reservation_date, start_time, end_time')
       .eq('shop_id', shopId)
-      .neq('status', 'cancelled')
 
     setExistingReservations(reservationData || [])
     setLoading(false)
