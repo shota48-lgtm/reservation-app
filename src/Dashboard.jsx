@@ -34,6 +34,7 @@ function StatusSelect({ status, onChange }) {
 function Dashboard({ session }) {
   const [shop, setShop] = useState(null)
   const [shopNotFound, setShopNotFound] = useState(false)
+  const [shopErrorMessage, setShopErrorMessage] = useState('')
   const [newShopName, setNewShopName] = useState('')
   const [creatingShop, setCreatingShop] = useState(false)
   const [reservations, setReservations] = useState([])
@@ -53,17 +54,21 @@ function Dashboard({ session }) {
 
     if (shopError) {
       console.error(shopError)
+      setShopNotFound(false)
+      setShopErrorMessage('店舗情報の取得に失敗しました。時間をおいて再度お試しください。')
       setLoading(false)
       return
     }
 
     if (!shopData) {
+      setShopErrorMessage('')
       setShopNotFound(true)
       setLoading(false)
       return
     }
 
     setShopNotFound(false)
+    setShopErrorMessage('')
     setShop(shopData)
 
     const { data: reservationData, error: reservationError } = await supabase
@@ -88,19 +93,25 @@ function Dashboard({ session }) {
   const handleCreateShop = async (e) => {
     e.preventDefault()
     setCreatingShop(true)
+    setShopErrorMessage('')
 
     const { error } = await supabase
       .from('shops')
       .insert([{ owner_id: session.user.id, name: newShopName }])
 
-    setCreatingShop(false)
-
     if (error) {
-      alert('店舗登録に失敗しました: ' + error.message)
+      setCreatingShop(false)
+      setShopErrorMessage(
+        error.code === '23505'
+          ? '既に店舗が登録されています。ページを再読み込みしてください。'
+          : '店舗登録に失敗しました: ' + error.message
+      )
       return
     }
 
-    fetchShopAndReservations()
+    // 直後の取得が終わるまでボタンを無効化したままにし、連打による重複作成を防ぐ
+    await fetchShopAndReservations()
+    setCreatingShop(false)
   }
 
   const handleLogout = async () => {
@@ -142,6 +153,29 @@ function Dashboard({ session }) {
     )
   }
 
+  if (shopErrorMessage && !shop) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="card w-full max-w-md p-8 text-center">
+          <p className="text-sm mb-5" style={{ color: 'var(--color-cancelled)' }}>{shopErrorMessage}</p>
+          <button
+            onClick={() => fetchShopAndReservations()}
+            className="btn-primary w-full py-2.5 rounded-lg font-medium"
+          >
+            再読み込み
+          </button>
+          <button
+            onClick={handleLogout}
+            className="mt-5 text-sm w-full text-center hover:underline"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            ログアウト
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (shopNotFound) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -162,6 +196,9 @@ function Dashboard({ session }) {
                 placeholder="例：とーふサロン"
               />
             </div>
+            {shopErrorMessage && (
+              <p className="text-sm" style={{ color: 'var(--color-cancelled)' }}>{shopErrorMessage}</p>
+            )}
             <button
               type="submit"
               disabled={creatingShop}
