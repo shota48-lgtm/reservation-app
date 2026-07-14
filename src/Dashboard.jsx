@@ -10,23 +10,32 @@ const STATUS_LABEL = {
   completed: '完了',
 }
 
-function StatusBadge({ status }) {
+const STATUS_OPTIONS = ['confirmed', 'completed', 'cancelled']
+
+function StatusSelect({ status, onChange }) {
   const isCancelled = status === 'cancelled'
   return (
-    <span
-      className="px-2.5 py-1 rounded-full text-xs font-medium"
+    <select
+      value={status}
+      onChange={(e) => onChange(e.target.value)}
+      className="px-2.5 py-1 rounded-full text-xs font-medium border-0"
       style={{
         backgroundColor: isCancelled ? 'var(--color-cancelled-bg)' : 'var(--color-confirmed-bg)',
         color: isCancelled ? 'var(--color-cancelled)' : 'var(--color-confirmed)',
       }}
     >
-      {STATUS_LABEL[status] || status}
-    </span>
+      {STATUS_OPTIONS.map((s) => (
+        <option key={s} value={s}>{STATUS_LABEL[s]}</option>
+      ))}
+    </select>
   )
 }
 
 function Dashboard({ session }) {
   const [shop, setShop] = useState(null)
+  const [shopNotFound, setShopNotFound] = useState(false)
+  const [newShopName, setNewShopName] = useState('')
+  const [creatingShop, setCreatingShop] = useState(false)
   const [reservations, setReservations] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -44,7 +53,7 @@ function Dashboard({ session }) {
       .from('shops')
       .select('*')
       .eq('owner_id', session.user.id)
-      .single()
+      .maybeSingle()
 
     if (shopError) {
       console.error(shopError)
@@ -52,6 +61,13 @@ function Dashboard({ session }) {
       return
     }
 
+    if (!shopData) {
+      setShopNotFound(true)
+      setLoading(false)
+      return
+    }
+
+    setShopNotFound(false)
     setShop(shopData)
 
     const { data: reservationData, error: reservationError } = await supabase
@@ -69,6 +85,24 @@ function Dashboard({ session }) {
     setLoading(false)
   }
 
+  const handleCreateShop = async (e) => {
+    e.preventDefault()
+    setCreatingShop(true)
+
+    const { error } = await supabase
+      .from('shops')
+      .insert([{ owner_id: session.user.id, name: newShopName }])
+
+    setCreatingShop(false)
+
+    if (error) {
+      alert('店舗登録に失敗しました: ' + error.message)
+      return
+    }
+
+    fetchShopAndReservations()
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
   }
@@ -83,9 +117,26 @@ function Dashboard({ session }) {
     setEditingReservation(reservation)
   }
 
+  const handleStatusChange = async (reservation, newStatus) => {
+    const previous = reservations
+    setReservations((rs) =>
+      rs.map((r) => (r.id === reservation.id ? { ...r, status: newStatus } : r))
+    )
+
+    const { error } = await supabase
+      .from('reservations')
+      .update({ status: newStatus })
+      .eq('id', reservation.id)
+
+    if (error) {
+      alert('ステータス変更に失敗しました: ' + error.message)
+      setReservations(previous)
+    }
+  }
+
   const handleDelete = async (reservation) => {
     const confirmed = window.confirm(
-      `${reservation.customers?.name || '顧客'}様の予約（${reservation.reservation_date}）を削除しますか？`
+      `${reservation.customers?.name || '顧客'}様の予約（${reservation.reservation_date}）を完全に削除しますか？この操作は取り消せません。`
     )
     if (!confirmed) return
 
@@ -106,6 +157,46 @@ function Dashboard({ session }) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p style={{ color: 'var(--color-text-muted)' }}>読み込み中...</p>
+      </div>
+    )
+  }
+
+  if (shopNotFound) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="card w-full max-w-md p-8">
+          <h1 className="font-display text-xl font-bold mb-1 text-center">店舗情報を登録してください</h1>
+          <p className="text-sm text-center mb-6" style={{ color: 'var(--color-text-muted)' }}>
+            もう少しで利用開始です
+          </p>
+          <form onSubmit={handleCreateShop} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">店舗名</label>
+              <input
+                type="text"
+                value={newShopName}
+                onChange={(e) => setNewShopName(e.target.value)}
+                required
+                className="input-field w-full px-3 py-2"
+                placeholder="例：とーふサロン"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={creatingShop}
+              className="btn-primary w-full py-2.5 rounded-lg font-medium"
+            >
+              {creatingShop ? '登録中...' : '登録する'}
+            </button>
+          </form>
+          <button
+            onClick={handleLogout}
+            className="mt-5 text-sm w-full text-center hover:underline"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            ログアウト
+          </button>
+        </div>
       </div>
     )
   }
@@ -192,7 +283,7 @@ function Dashboard({ session }) {
                     <div key={r.id} className="card p-4">
                       <div className="flex justify-between items-start mb-2">
                         <p className="font-medium text-sm">{r.customers?.name || '-'}</p>
-                        <StatusBadge status={r.status} />
+                        <StatusSelect status={r.status} onChange={(newStatus) => handleStatusChange(r, newStatus)} />
                       </div>
                       <p className="text-sm mb-1" style={{ color: 'var(--color-text-muted)' }}>
                         {r.reservation_date}　{r.start_time} - {r.end_time}
@@ -236,7 +327,7 @@ function Dashboard({ session }) {
                           <td className="px-5 py-4 text-sm">{r.start_time} - {r.end_time}</td>
                           <td className="px-5 py-4 text-sm font-medium">{r.customers?.name || '-'}</td>
                           <td className="px-5 py-4 text-sm">
-                            <StatusBadge status={r.status} />
+                            <StatusSelect status={r.status} onChange={(newStatus) => handleStatusChange(r, newStatus)} />
                           </td>
                           <td className="px-5 py-4 text-sm text-right space-x-3">
                             <button
@@ -279,6 +370,7 @@ function Dashboard({ session }) {
               reservations={reservations}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onStatusChange={handleStatusChange}
             />
           </>
         )}
