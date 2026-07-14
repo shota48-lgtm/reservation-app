@@ -42,10 +42,6 @@ function Dashboard({ session }) {
   const [editingReservation, setEditingReservation] = useState(null)
   const [activeTab, setActiveTab] = useState('reservations') // 'reservations' | 'calendar' | 'customers'
 
-  useEffect(() => {
-    fetchShopAndReservations()
-  }, [])
-
   const fetchShopAndReservations = async () => {
     setLoading(true)
 
@@ -84,6 +80,10 @@ function Dashboard({ session }) {
 
     setLoading(false)
   }
+
+  useEffect(() => {
+    fetchShopAndReservations()
+  }, [])
 
   const handleCreateShop = async (e) => {
     e.preventDefault()
@@ -286,7 +286,7 @@ function Dashboard({ session }) {
                         <StatusSelect status={r.status} onChange={(newStatus) => handleStatusChange(r, newStatus)} />
                       </div>
                       <p className="text-sm mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                        {r.reservation_date}　{r.start_time} - {r.end_time}
+                        {r.reservation_date}{'　'}{r.start_time} - {r.end_time}
                       </p>
                       <div className="flex gap-4 mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
                         <button

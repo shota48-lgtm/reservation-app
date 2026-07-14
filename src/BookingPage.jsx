@@ -31,10 +31,6 @@ function BookingPage() {
 
   const today = new Date().toISOString().split('T')[0]
 
-  useEffect(() => {
-    fetchShop()
-  }, [shopId])
-
   const fetchShop = async () => {
     setLoading(true)
 
@@ -60,6 +56,10 @@ function BookingPage() {
     setExistingReservations(reservationData || [])
     setLoading(false)
   }
+
+  useEffect(() => {
+    fetchShop()
+  }, [shopId])
 
   const timeToMinutes = (t) => {
     const [h, m] = t.split(':').map(Number)
