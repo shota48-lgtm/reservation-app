@@ -42,10 +42,6 @@ function Dashboard({ session }) {
   const [editingReservation, setEditingReservation] = useState(null)
   const [activeTab, setActiveTab] = useState('reservations') // 'reservations' | 'calendar' | 'customers'
 
-  useEffect(() => {
-    fetchShopAndReservations()
-  }, [])
-
   const fetchShopAndReservations = async () => {
     setLoading(true)
 
@@ -84,6 +80,10 @@ function Dashboard({ session }) {
 
     setLoading(false)
   }
+
+  useEffect(() => {
+    fetchShopAndReservations()
+  }, [])
 
   const handleCreateShop = async (e) => {
     e.preventDefault()
@@ -132,25 +132,6 @@ function Dashboard({ session }) {
       alert('ステータス変更に失敗しました: ' + error.message)
       setReservations(previous)
     }
-  }
-
-  const handleDelete = async (reservation) => {
-    const confirmed = window.confirm(
-      `${reservation.customers?.name || '顧客'}様の予約（${reservation.reservation_date}）を完全に削除しますか？この操作は取り消せません。`
-    )
-    if (!confirmed) return
-
-    const { error } = await supabase
-      .from('reservations')
-      .delete()
-      .eq('id', reservation.id)
-
-    if (error) {
-      alert('削除に失敗しました: ' + error.message)
-      return
-    }
-
-    fetchShopAndReservations()
   }
 
   if (loading) {
@@ -286,7 +267,7 @@ function Dashboard({ session }) {
                         <StatusSelect status={r.status} onChange={(newStatus) => handleStatusChange(r, newStatus)} />
                       </div>
                       <p className="text-sm mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                        {r.reservation_date}　{r.start_time} - {r.end_time}
+                        {r.reservation_date}{'　'}{r.start_time} - {r.end_time}
                       </p>
                       <div className="flex gap-4 mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
                         <button
@@ -295,13 +276,6 @@ function Dashboard({ session }) {
                           style={{ color: 'var(--color-accent)' }}
                         >
                           編集
-                        </button>
-                        <button
-                          onClick={() => handleDelete(r)}
-                          className="text-sm hover:underline"
-                          style={{ color: 'var(--color-cancelled)' }}
-                        >
-                          削除
                         </button>
                       </div>
                     </div>
@@ -337,13 +311,6 @@ function Dashboard({ session }) {
                             >
                               編集
                             </button>
-                            <button
-                              onClick={() => handleDelete(r)}
-                              className="hover:underline"
-                              style={{ color: 'var(--color-cancelled)' }}
-                            >
-                              削除
-                            </button>
                           </td>
                         </tr>
                       ))}
@@ -369,7 +336,6 @@ function Dashboard({ session }) {
             <CalendarView
               reservations={reservations}
               onEdit={handleEdit}
-              onDelete={handleDelete}
               onStatusChange={handleStatusChange}
             />
           </>

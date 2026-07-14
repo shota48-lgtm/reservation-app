@@ -5,10 +5,6 @@ function CustomerList({ shopId }) {
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchCustomers()
-  }, [])
-
   const fetchCustomers = async () => {
     setLoading(true)
 
@@ -27,6 +23,10 @@ function CustomerList({ shopId }) {
 
     setLoading(false)
   }
+
+  useEffect(() => {
+    fetchCustomers()
+  }, [])
 
   if (loading) {
     return (

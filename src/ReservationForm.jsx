@@ -1,23 +1,8 @@
 import { useState } from 'react'
 import { supabase } from './supabaseClient'
-
-function generateTimeOptions(startHour = 8, endHour = 21, stepMinutes = 15) {
-  const options = []
-  for (let h = startHour; h <= endHour; h++) {
-    for (let m = 0; m < 60; m += stepMinutes) {
-      if (h === endHour && m > 0) break
-      options.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
-    }
-  }
-  return options
-}
+import { generateTimeOptions, timeToMinutes, rangesOverlap } from './lib/time'
 
 const TIME_OPTIONS = generateTimeOptions()
-
-function timeToMinutes(t) {
-  const [h, m] = t.split(':').map(Number)
-  return h * 60 + m
-}
 
 function ReservationForm({ shopId, onClose, onSaved, editData }) {
   const isEdit = !!editData
@@ -51,14 +36,9 @@ function ReservationForm({ shopId, onClose, onSaved, editData }) {
       return 'チェック中にエラーが発生しました: ' + error.message
     }
 
-    const newStart = timeToMinutes(startTime)
-    const newEnd = timeToMinutes(endTime)
-
-    const overlapping = (data || []).some((r) => {
-      const existingStart = timeToMinutes(r.start_time.slice(0, 5))
-      const existingEnd = timeToMinutes(r.end_time.slice(0, 5))
-      return newStart < existingEnd && newEnd > existingStart
-    })
+    const overlapping = (data || []).some((r) =>
+      rangesOverlap(startTime, endTime, r.start_time.slice(0, 5), r.end_time.slice(0, 5))
+    )
 
     if (overlapping) {
       return 'その時間帯はすでに他の予約と重なっています'
